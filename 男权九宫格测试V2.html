@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            background: #f5f5f5;
+            font-family: 'Microsoft YaHei', sans-serif;
+        }
+
+        #menu {
+            width: 800px;
+            min-height: 500px;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        /* 开始界面样式 */
+        #head {
+            width: 100%;
+            text-align: center;
+        }
+
+        #head h1 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+        }
+
+        #head ul {
+            background: #f8f9fa;
+            padding: 20px 40px;
+            border-radius: 10px;
+            text-align: left;
+            margin: 20px auto;
+            max-width: 600px;
+        }
+
+        #head li {
+            margin: 10px 0;
+            color: #495057;
+        }
+
+        /* 按钮通用样式 */
+        button {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 25px;
+            background: #4CAF50;
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 2px 8px rgba(76, 175, 80, 0.4);
+        }
+
+        /* 问题界面样式 */
+        #board {
+            width: 100%;
+            max-width: 600px;
+        }
+
+        #choiceForm {
+            background: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+
+        #num {
+            font-size: 18px;
+            color: #2c3e50;
+            margin-bottom: 15px;
+            display: block;
+        }
+
+        .option-container {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .radio-option {
+            display: flex;
+            align-items: center;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .radio-option:hover {
+            background: #e9ecef;
+        }
+
+        /* 九宫格样式优化 */
+        .map {
+            display: grid;
+            grid-template-columns: repeat(3, 120px);
+            grid-template-rows: repeat(3, 120px);
+            gap: 8px;
+            margin: 20px 0;
+        }
+
+        .map div {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .map div:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        #pointer {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background-color: #ff4757;
+            box-shadow: 0 0 10px rgba(255, 71, 87, 0.6);
+        }
+
+        /* 结果描述样式 */
+        #describe {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+            line-height: 1.6;
+        }
+
+        #tag {
+            display: inline-block;
+            padding: 5px 15px;
+            border-radius: 20px;
+            margin: 0 10px;
+        }
+    </style>
+</head>
+<body>
+    <div id="menu">
+        <div id="head" style="width: 100%;display: flex;flex-direction: column;">
+            <h1 style="text-align: center;">男权九宫格阵营测试</h1>
+            <h5 style="text-align: center;">原制作人：男性报吧/鷄你实在是太梅</span>
+            <h5 style="text-align: center;">界面美化：新男权吧/雅</span>
+            <h2 style="text-align: center;">注意事项：如果你不符合下面的任意一条，测试无效。</h2>
+            <ul>
+                <li>无论如何我都不会做龟男。</li>
+                <li>无论如何我都不会阻止男性争取权益。</li>
+                <li>我始终认为女拳是特权。</li>
+                <li>对正常的女性持何种态度不会影响我的选择。</li>
+            </ul>
+            <button style="margin: 0 auto; 
+                           background-color: mediumseagreen; 
+                           min-width: 120px;  /* 增加最小宽度 */
+                           height: 45px;
+                           font-size: 16px;   /* 调整字体大小 */
+                           padding: 0 20px;   /* 增加左右内边距 */
+                           white-space: nowrap; /* 防止文字换行 */
+                           " onclick="start()">开始测试</button>
+        </div>
+        <div id="board" style="display: none;">
+            <form id="choiceForm">
+                <span id="num"></span><br>
+                <label for="optionA" id="opt1"></label>
+                <input type="radio" id="optionA" name="choice" value="A" onchange="next(true)">
+                <br>
+                <label for="optionB" id="opt2"></label>
+                <input type="radio" id="optionB" name="choice" value="B" onchange="next(false)">
+                <br>
+            </form>
+            <div style="display: flex;justify-content: space-around;margin-top: 30px;">
+                <button id="next" style="margin: 0 auto;background-color: mediumseagreen;width: 100px;height: 45px; min-width: 240px;" onclick="next()">回答下一题</button>
+                <button id="prev" style="margin: 0 auto;background-color: mediumseagreen;width: 100px;height: 45px; min-width: 240px;" onclick="prev()">返回上一题</button>
+            </div>
+        </div>
+        <div id="result" style="display: none;">
+            <h2>你最可能的阵营：<b id="tag"></b>点击不同阵营获取相关内容</h2>
+            <div class="map">
+                <div style="background-color: chartreuse;" onclick="switchText(0)">加速主义</div>
+                <div style="background-color: green;" onclick="switchText(1)">自然选择主义</div>
+                <div style="background-color: lightskyblue;" onclick="switchText(2)">胜利主义</div>
+                <div style="background-color: pink;" onclick="switchText(3)">泡学主义</div>
+                <div style="background-color: yellow;" onclick="switchText(4)">日子人主义</div>
+                <div style="background-color: orange;" onclick="switchText(5)">经典男权</div>
+                <div style="background-color: royalblue;" onclick="switchText(6)">失败主义</div>
+                <div style="background-color: palevioletred;" onclick="switchText(7)">个人主义</div>
+                <div style="background-color: gray;" onclick="switchText(8)">经典米格道</div>
+                <div id="pointer"></div>
+            </div>
+            <div id="describe"></div>
+        </div>
+    </div>
+</body>
+</html>
+<script>
+    let list = [
+        //amplify
+        {
+            type:'amplify',
+            opt1:'传播男权思想是有必要的。',
+            opt2:'有没有男权，女拳该捞还是会捞，该失败还是会失败。',
+            select:undefined
+        },
+        {
+            type:'amplify',
+            opt1:'男性更需要靠联合夺取权益。',
+            opt2:'男性更需要靠个人能力夺取权益。',
+            select:undefined
+        },
+        {
+            type:'amplify',
+            opt1:'十女九拳。',
+            opt2:'正常女性还是占大多数。',
+            select:undefined
+        },
+        {
+            type:'amplify',
+            opt1:'传播男权思想，男性赢的更快。',
+            opt2:'不需要刻意传播男权思想。',
+            select:undefined
+        },
+        {
+            type:'amplify',
+            opt1:'我们从一开始就要权责对等。',
+            opt2:'先平权了再想其它的吧。',
+            select:undefined
+        },
+        {
+            type:'amplify',
+            opt1:'必须反击，网络仇男才会消失。',
+            opt2:'实在不行我退网，眼不见心不烦。',
+            select:undefined
+        },
+        {
+            type:'amplify',
+            opt1:'虽然二者有重合度，但性别矛盾是首要的。',
+            opt2:'虽然二者有重合度，但阶级矛盾是首要的。',
+            select:undefined
+        },
+        {
+            type:'amplify',
+            opt1:'不反击，男人就完了。',
+            opt2:'不用刻意反击，女拳不工作迟早会完的。',
+            select:undefined
+        },
+        {
+            type:'amplify',
+            opt1:'不反击，我们迟早会成为胖猫。',
+            opt2:'拳打到我再反击也不迟，胖猫不做ATM就没事。',
+            select:undefined
+        },
+        {
+            type:'amplify',
+            opt1:'反击才能止损。',
+            opt2:'反击太浪费精力了。',
+            select:undefined
+        },
+        //direction
+        {
+            type:'direction',
+            opt1:'反击女拳比吹捧女拳效果更好。',
+            opt2:'吹捧女拳比反击女拳效果更好。',
+            select:undefined
+        },
+        {
+            type:'direction',
+            opt1:'任何行为都要反击女拳。',
+            opt2:'只要我足够聪明，适当讨好女拳收益才最大。',
+            select:undefined
+        },
+        {
+            type:'direction',
+            opt1:'我们应当多宣传，女拳就是喜欢诬告！',
+            opt2:'先生请赴死，龟男才能醒！',
+            select:undefined
+        },
+        {
+            type:'direction',
+            opt1:'我们要停止所谓国男不如洋男的宣传！',
+            opt2:'当然要鼓励姐妹们倒贴洋男了！',
+            select:undefined
+        },
+        {
+            type:'direction',
+            opt1:'凭什么只有女性有自己的节日？',
+            opt2:'希望女性节日多一些，我说真的！',
+            select:undefined
+        },
+        {
+            type:'direction',
+            opt1:'我会毫无保留地对网络女拳输出。',
+            opt2:'我更想看乐子。',
+            select:undefined
+        },
+        {
+            type:'direction',
+            opt1:'女拳的垃圾言论让我血压飙升。',
+            opt2:'女拳的降智言论给我带来了快乐。',
+            select:undefined
+        },
+        {
+            type:'direction',
+            opt1:'非必要不恋爱结婚，远离寄生虫。',
+            opt2:'没必要，玩完就走不香吗？',
+            select:undefined
+        },
+        {
+            type:'direction',
+            opt1:'接触女拳只会让自己被爆金币。',
+            opt2:'无所谓，我会爆女拳的金币。',
+            select:undefined
+        },
+        {
+            type:'direction',
+            opt1:'现实里我会公开地反拳。',
+            opt2:'现实是让着点她们自己会少招惹麻烦。',
+            select:undefined
+        },
+        //result
+        {
+            type:'result',
+            opt1:'女拳会自取灭亡。',
+            opt2:'女拳会长期存在。',
+            select:undefined
+        },
+        {
+            type:'result',
+            opt1:'即使女拳有塔的偏袒和境外势力的支持，但最终会失败。',
+            opt2:'塔都是利女的，消灭女拳希望不大。',
+            select:undefined
+        },
+        {
+            type:'result',
+            opt1:'女拳已经开始走下坡路了。',
+            opt2:'反女拳是持久战。',
+            select:undefined
+        },
+        {
+            type:'result',
+            opt1:'如果没有女拳，男女可能实现平等。',
+            opt2:'女性天生就比男性高一个阶层。',
+            select:undefined
+        },
+        {
+            type:'result',
+            opt1:'就算工作岗位优待女性，最后也会迫于现实选男性的。',
+            opt2:'就算工作岗位选男性也是承担更多义务，优待女性的风气不会消失。',
+            select:undefined
+        },
+        {
+            type:'result',
+            opt1:'龟男最终会被打醒或被男权取代。',
+            opt2:'龟男不会醒并且始终是大多数。',
+            select:undefined
+        },
+        {
+            type:'result',
+            opt1:'男人未来的处境会更好。',
+            opt2:'男人未来的处境会更差。',
+            select:undefined
+        },
+        {
+            type:'result',
+            opt1:'大部分男人能做到脱离女人。',
+            opt2:'大部分男人做不到脱离女人。',
+            select:undefined
+        },
+        {
+            type:'result',
+            opt1:'社会以后不会惯着女人了。',
+            opt2:'社会以后还会继续惯着女人。',
+            select:undefined
+        },
+        {
+            type:'result',
+            opt1:'我相信反女权会成功的。',
+            opt2:'我对反女权成功不抱太大希望。',
+            select:undefined
+        },
+    ]
+    let results = [
+        {
+            color:'chartreuse',
+            tag:'加速主义',
+            text:'加速主义:你赞成捧杀女拳，把油门踩到底。你以极端乐子人的心态看待，认为女拳泛滥不会影响到自己，反而会让她们更快地作死。因此，只要不伤害男性利益，你鼓励女拳一切的诉求，因为你知道她们也只能在小红书上发泄发泄情绪了。'
+        },
+        {
+            color:'green',
+            tag:'自然选择主义',
+            text:'自然选择主义:你大部分时间对于女权都处于一种事不关己高高挂起的状态。因为你知道，就算女拳再猖狂，最后都会因为她们索取特权的本质和不参与劳动的特点而自取灭亡。你认为男性不需要刻意地反击，最后社会达尔文主义会重新给予男人主导权。'
+        },
+        {
+            color:'lightskyblue',
+            tag:'胜利主义',
+            text:'胜利主义:你认为反女拳的斗争一定会胜利。但是你并不希望静观其变，而是选择主动反击，因为女拳被消灭的越快越好，她们在社会上存在一刻，都是社会的损失。只要男性联合起来反击女拳和龟男，必将取得胜利。'
+        },
+        {
+            color:'pink',
+            tag:'泡学主义',
+            text:'泡学主义:你不认为单纯的反女拳是最适合你的路线。这并不代表你是龟男，相反，你很清楚地知道，女拳的智商普遍偏低，只要给她们一点情绪价值，就可以拿捏她们，把她们玩弄于股掌之中。忍一忍就有实际利益，何乐而不为呢？'
+        },
+        {
+            color:'yellow',
+            tag:'日子人主义',
+            text:'日子人主义:你不觉得女拳是一件短时间能解决的事，但你也认为反击女拳很耗费精力。因此，你经常采用屏蔽的方式隔离这些噪音。如果网上女拳泛滥就少上网，如果女拳跳脸就拉黑。你不希望在这些事上浪费太多精力，把自己的生活过好就足够了。'
+        },
+        {
+            color:'orange',
+            tag:'经典男权',
+            text:'经典男权:你坚信权利是通过反抗争取的。虽然女拳注定会失败，但并不是她们自己就可以作死自己，而是必须通过反击才能成功。因此，你希望投身于最直接反女拳的斗争中，联合男性的声音为自己争取权益。'
+        },
+        {
+            color:'royalblue',
+            tag:'失败主义',
+            text:'失败主义:你对男性是否能夺回权利相对悲观，认为在塔的偏袒和境外势力的支持下，女拳只会愈演愈烈，龟男也实在太多，组织化的反女拳根本不可能胜利。面对女拳，你虽然内心清楚她们的特权，但表面上会做出适当的让步，来让自己得以生存和利益最大化。'
+        },
+        {
+            color:'palevioletred',
+            tag:'个人主义',
+            text:'个人主义:你虽然支持男性组织起来一起争取权利，但实际上你并不认为这是唯一的做法，并且组织化反女拳相当耗费精力。你倾向于把重点放在每个男性个体的提升中，表面上声浪再怎么大都没有用，你希望的是通过自己的能力取得权益。'
+        },
+        {
+            color:'gray',
+            tag:'经典米格道',
+            text:'经典米格道:在女拳泛滥的社会，你深知组织化的男性阵线很难建立，但你并不打算放弃，而是主要通过思想联合志同道合的伙伴。你也知道大部分龟男是叫不醒的，你从心底鄙视他们。你希望彻底地去责任化，赢得个体的解放。'
+        }
+    ]
+    let order = [...Array(30).keys()].sort(() => Math.random() - 0.5)
+    let cnt = 0;
+    let pos = 0;
+    function start() {
+        document.getElementById('head').style.display='none'
+        document.getElementById('board').style.display='block'
+        update()
+    }
+    function update(){
+        document.getElementById('num').innerText=(cnt+1)+'/30'
+        document.getElementById('opt1').innerText=list[order[cnt]].opt1
+        document.getElementById('opt2').innerText=list[order[cnt]].opt2
+        if(list[order[cnt]].select!=undefined){
+            document.getElementById('next').style.display='block'
+            if(list[order[cnt]].select){
+                document.getElementById('optionA').checked=true
+                document.getElementById('optionB').checked=false
+            }
+            else{
+                document.getElementById('optionB').checked=true
+                document.getElementById('optionA').checked=false
+            }
+        }
+        else{
+            document.getElementById('optionA').checked=false
+            document.getElementById('optionB').checked=false
+            document.getElementById('next').style.display='none'
+        }
+        if(cnt){
+            document.getElementById('prev').style.display='block'
+        }
+        else{
+            document.getElementById('prev').style.display='none'
+        }
+    }
+    function next(res){
+        if(res!=undefined){
+            list[order[cnt]].select=res
+        }
+        if(cnt==29){
+            result()
+        }
+        else{
+            cnt++
+            update()
+        }
+    }
+    function prev(){
+        cnt--
+        update()
+    }
+    function result(){
+        console.log(list.map(item => ({type:item.type,select:item.select})))
+        let x=0
+        let y=0
+        list.forEach((item)=>{
+            if(item.type=='result'){
+                if(item.select){
+                    y++
+                }
+                else{
+                    y--
+                }
+            }
+            else if(item.type=='direction'){
+                if(item.select){
+                    x++
+                }
+                else{
+                    x--
+                }
+            }
+        })
+        list.forEach((item)=>{
+            if(item.type=='amplify'){
+                if(item.select){
+                    x>0?x++:x--
+                }
+                else{
+                    if(x){
+                        x>0?x--:x++
+                    }
+                }
+            }
+        })
+        if(x>-7)pos++
+        if(x>=7)pos++
+        if(y<=2)pos+=3
+        if(y<-2)pos+=3
+        let posx= Math.round(x*7.5) +180
+        let posy= -y*15 - 205
+        document.getElementById('pointer').style.transform=`translate(${posx}px,${posy}px)`
+        document.getElementById('board').style.display='none'
+        document.getElementById('result').style.display='block'
+        document.getElementById('menu').style.height='450px'
+        document.getElementById('tag').innerHTML=results[pos].tag
+        document.getElementById('tag').style.backgroundColor=results[pos].color
+        document.getElementById('describe').innerHTML=results[pos].text
+    }
+    function switchText(x){
+        document.getElementById('describe').innerHTML=results[x].text
+    }
+</script>
